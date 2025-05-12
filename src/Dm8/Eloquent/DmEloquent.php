@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as IlluminateQueryBuilder;
 use LaravelDm8\Dm8\Dm8Connection;
-use LaravelDm8\Dm8\Query\Grammars\OracleGrammar;
-use LaravelDm8\Dm8\Query\OracleBuilder as QueryBuilder;
+use LaravelDm8\Dm8\Query\Grammars\DmGrammar;
+use LaravelDm8\Dm8\Query\DmBuilder as QueryBuilder;
 
 class DmEloquent extends Model
 {
@@ -168,7 +168,7 @@ class DmEloquent extends Model
         $conn = $this->getConnection();
         $grammar = $conn->getQueryGrammar();
 
-        if ($grammar instanceof OracleGrammar) {
+        if ($grammar instanceof DmGrammar) {
             return new QueryBuilder($conn, $grammar, $conn->getPostProcessor());
         }
 
