@@ -7,7 +7,7 @@
 ## 推荐更新版本到最新版
 
 > 修改部分适配 Laravel  
-> 1. 适配 InsertGetId 
+> 1. 适配 InsertGetId，当表主键非 id 时，需要指定主键列名
 > 2. 修复 DmBuilder 中 DmAutoIncrementHelper 引用
 > 3. 适配 withCount, 主要是 x_table as y 情况 前缀补充，原包，没有在 y 前面追加前缀，和 Laravel 不兼容
 > 4. 适配 cast json ，数组参数转 json 入库
