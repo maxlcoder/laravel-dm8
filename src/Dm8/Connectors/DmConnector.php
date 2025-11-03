@@ -107,7 +107,7 @@ class DmConnector extends Connector implements ConnectorInterface
      */
     protected function setTNS(array $config)
     {
-        $config['tns'] = "";
+        $config['tns'] = "dm:host={$config['host']};dbname={$config['database']};port={$config['port']};";
 
         return $config;
     }

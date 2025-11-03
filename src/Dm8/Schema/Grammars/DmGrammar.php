@@ -44,14 +44,7 @@ class DmGrammar extends Grammar
      *
      * @var bool
      */
-    protected $length_in_char = true;
-
-    /**
-     * Whether to use 'identity' instead of 'auto_increment' for auto increment columns.
-     *
-     * @var bool
-     */
-    protected $use_identity = true;
+    protected $length_in_char = false;
 
     /**
      * If this Grammar supports schema changes wrapped in a transaction.
@@ -903,5 +896,5 @@ class DmGrammar extends Grammar
         }
 
         return $value !== '*' ? sprintf($this->wrapper, $value) : $value;
-    }    
+    }
 }

@@ -355,7 +355,7 @@ class Dm8Connection extends Connection
         $grammar->setSchemaPrefix($this->getConfigSchemaPrefix());
 
         // Set length_in_char configuration for SchemaGrammar
-        if ($grammar instanceof \LaravelDm8\Dm8\Schema\Grammars\DmGrammar) {
+        if ($grammar instanceof SchemaGrammar) {
             $grammar->setLengthInChar($this->getConfigLengthInChar());
         }
 
@@ -379,7 +379,7 @@ class Dm8Connection extends Connection
      */
     protected function getConfigLengthInChar()
     {
-        return isset($this->config['length_in_char']) ? (bool) $this->config['length_in_char'] : true;
+        return isset($this->config['length_in_char']) ? (bool) $this->config['length_in_char'] : false;
     }
 
     /**
