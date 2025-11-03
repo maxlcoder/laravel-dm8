@@ -592,6 +592,17 @@ class DmGrammar extends Grammar
     }
 
     /**
+     * Determine if the given column is a JSON selector.
+     *
+     * @param  string  $column
+     * @return bool
+     */
+    protected function isJsonSelector($column)
+    {
+        return Str::contains($column, '->');
+    }
+
+    /**
      * Prepare the bindings for an update statement.
      *
      * Booleans, integers, and doubles are inserted into JSON updates as raw values.
