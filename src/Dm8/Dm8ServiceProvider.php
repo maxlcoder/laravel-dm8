@@ -48,7 +48,7 @@ class Dm8ServiceProvider extends ServiceProvider
             $connector = new Connector();
             $connection = $connector->connect($config);
             $db = new Dm8Connection($connection, $database, $prefix, $config);
-            
+            $db->setSchema($database);
             return $db;
         });
     }
