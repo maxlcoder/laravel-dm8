@@ -506,11 +506,7 @@ class DmGrammar extends Grammar
      */
     protected function typeChar(Fluent $column)
     {
-        $length = $column->length;
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "char({$length})";
+        return $this->wrapCharType('char', $column->length);
     }
 
     /**
@@ -521,11 +517,7 @@ class DmGrammar extends Grammar
      */
     protected function typeString(Fluent $column)
     {
-        $length = $column->length;
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "varchar2({$length})";
+        return $this->wrapCharType('varchar2', $column->length);
     }
 
     /**
@@ -536,11 +528,7 @@ class DmGrammar extends Grammar
      */
     protected function typeNvarchar2(Fluent $column)
     {
-        $length = $column->length;
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "nvarchar2({$length})";
+        return $this->wrapCharType('nvarchar2', $column->length);
     }
 
     /**
@@ -687,12 +675,7 @@ class DmGrammar extends Grammar
      */
     protected function typeEnum(Fluent $column)
     {
-        $length = ($column->length) ? $column->length : 255;
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-
-        return "varchar2({$length})";
+        return $this->wrapCharType('varchar2', ($column->length) ? $column->length : 255);
     }
 
     /**
@@ -769,11 +752,7 @@ class DmGrammar extends Grammar
      */
     protected function typeUuid(Fluent $column)
     {
-        $length = '36';
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "char({$length})";
+        return $this->wrapCharType('char', '36');
     }
 
     /**
@@ -784,11 +763,7 @@ class DmGrammar extends Grammar
      */
     protected function typeIpAddress(Fluent $column)
     {
-        $length = '45';
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "varchar({$length})";
+        return $this->wrapCharType('varchar', '45');
     }
 
     /**
@@ -799,11 +774,7 @@ class DmGrammar extends Grammar
      */
     protected function typeMacAddress(Fluent $column)
     {
-        $length = '17';
-        if ($this->length_in_char) {
-            $length .= ' char';
-        }
-        return "varchar({$length})";
+        return $this->wrapCharType('varchar', '17');
     }
 
     /**
@@ -896,5 +867,17 @@ class DmGrammar extends Grammar
         }
 
         return $value !== '*' ? sprintf($this->wrapper, $value) : $value;
+    }
+
+    /**
+     * Wrap a char type with length and char option.
+     *
+     * @param  string  $type
+     * @param  string  $length
+     * @return string
+     */
+    protected function wrapCharType($type, $length)
+    {
+        return $this->length_in_char ? $type.'('.$length.' char)' : $type.'('.$length.')';
     }
 }
