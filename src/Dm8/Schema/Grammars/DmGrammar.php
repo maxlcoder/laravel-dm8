@@ -293,15 +293,7 @@ class DmGrammar extends Grammar
      */
     public function compileUnique(Blueprint $blueprint, Fluent $command)
     {
-        $columns = array_map(function ($column) {
-            $column = $this->wrap($column);
-
-            return "lower({$column})";
-        }, $command->columns);
-
-        $columns = implode(', ', $columns);
-
-        return sprintf('create unique index %s on %s (%s)', $command->index, $this->wrapTable($blueprint), $columns);
+        return "create unique index {$command->index} on ".$this->wrapTable($blueprint).' ( '.$this->columnize($command->columns).' )';
     }
 
     /**
@@ -539,7 +531,7 @@ class DmGrammar extends Grammar
      */
     protected function typeText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -550,7 +542,7 @@ class DmGrammar extends Grammar
      */
     protected function typeMediumText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -561,7 +553,7 @@ class DmGrammar extends Grammar
      */
     protected function typeLongText(Fluent $column)
     {
-        return 'clob';
+        return 'text';
     }
 
     /**
@@ -627,7 +619,17 @@ class DmGrammar extends Grammar
      */
     protected function typeFloat(Fluent $column)
     {
-        return $this->typeDouble($column);
+        // float is not supprot totol or places, so we use numeric instead
+        if ($column->total) {
+            $return_type = "numeric({$column->total}";
+            if ($column->places) {
+                $return_type .= ", {$column->places})";
+            } else {
+                $return_type .= ")";
+            }
+            return $return_type;
+        }
+        return "float";
     }
 
     /**
@@ -638,11 +640,17 @@ class DmGrammar extends Grammar
      */
     protected function typeDouble(Fluent $column)
     {
-        if ($column->total && $column->places) {
-            return "double({$column->total}, {$column->places})";
+        // double is not supprot total or places, so we use numeric instead
+        if ($column->total) {
+            $return_type = "numeric({$column->total}";
+            if ($column->places) {
+                $return_type .= ", {$column->places})";
+            } else {
+                $return_type .= ")";
+            }
+            return $return_type;
         }
-
-        return 'double';
+        return "double";
     }
 
     /**
@@ -785,7 +793,7 @@ class DmGrammar extends Grammar
      */
     protected function typeJson(Fluent $column)
     {
-        return 'clob';
+        return 'json';
     }
 
     /**
@@ -796,7 +804,7 @@ class DmGrammar extends Grammar
      */
     protected function typeJsonb(Fluent $column)
     {
-        return 'clob';
+        return 'jsonb';
     }
 
     /**

@@ -51,6 +51,7 @@ class Dm8Connection extends Connection
         parent::__construct($pdo, $database, $tablePrefix, $config);
         $this->sequence = new Sequence($this);
         $this->trigger = new Trigger($this);
+        $this->setSchema($this->pickSchema($config['username'], $database));
     }
 
     /**
@@ -77,6 +78,32 @@ class Dm8Connection extends Connection
         ];
 
         return $this->setSessionVars($sessionVars);
+    }
+
+    /**
+     * Pick the correct schema according to the username & database.
+     *
+     * @param  string  $username
+     * @param  string  $database
+     * @return string  the correct schema
+     */
+    protected function pickSchema($username, $database) {
+        if ($username == $database) {
+            return $database;
+        }
+        // according to the username & database, pick the correct schema
+        $sql = "select object_name from dba_objects where object_type='SCH'";
+        try {
+            $result = $this->select($sql);
+            $all_databases = array_map('strtolower', array_column($result, 'object_name'));
+            if (!in_array(strtolower($database), $all_databases)) {
+                return $username;
+            }
+            return $database;
+        } catch (\Exception $e) {
+            return $database;
+        }
+        return $username;
     }
 
     /**

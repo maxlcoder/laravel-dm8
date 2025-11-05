@@ -58,8 +58,8 @@ class DmBlueprint extends Blueprint
 
         $index = str_replace(['-', '.'], '_', $index);
 
-        //shorten the name if it is longer than 30 chars
-        while (strlen($index) > 30) {
+        //shorten the name if it is longer than 128 chars
+        while (strlen($index) > 128) {
             $parts = explode('_', $index);
 
             for ($i = 0; $i < count($parts); $i++) {
