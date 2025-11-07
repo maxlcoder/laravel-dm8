@@ -12,5 +12,6 @@ return [
         'charset'        => env('DB_CHARSET', 'UTF8'),
         'prefix'         => env('DB_PREFIX', ''),
         'length_in_char' => env('DB_LENGTH_IN_CHAR', true),  // 是否在字符串类型字段精度后添加 char 参数
+        'strict_mode'    => env('DB_STRICT_MODE', false), // 是否启用严格模式, 非严格模式下, 未设置默认值的 NOT NULL 列会自动设置为默认值
     ],
 ];

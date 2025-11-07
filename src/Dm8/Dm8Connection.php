@@ -51,7 +51,7 @@ class Dm8Connection extends Connection
         parent::__construct($pdo, $database, $tablePrefix, $config);
         $this->sequence = new Sequence($this);
         $this->trigger = new Trigger($this);
-        $this->setSchema($this->pickSchema($config['username'], $database));
+        $this->setSchema($this->prepareSchema($config['username'], $database));
     }
 
     /**
@@ -87,22 +87,23 @@ class Dm8Connection extends Connection
      * @param  string  $database
      * @return string  the correct schema
      */
-    protected function pickSchema($username, $database) {
+    protected function prepareSchema($username, $database) {
         if ($username == $database) {
             return $database;
         }
         // according to the username & database, pick the correct schema
-        $sql = "select object_name from dba_objects where object_type='SCH'";
         try {
-            $result = $this->select($sql);
-            $all_databases = array_map('strtolower', array_column($result, 'object_name'));
-            if (!in_array(strtolower($database), $all_databases)) {
-                return $username;
+            $result = $this->select("select object_name from dba_objects where object_type='SCH' and object_name='$database'");
+            if (!empty($result)) {
+                return $database;
             }
+
+            $this->statement("create schema $database authorization $username");
             return $database;
         } catch (\Exception $e) {
-            return $database;
+            return $username;
         }
+
         return $username;
     }
 
@@ -381,11 +382,6 @@ class Dm8Connection extends Connection
     {
         $grammar->setSchemaPrefix($this->getConfigSchemaPrefix());
 
-        // Set length_in_char configuration for SchemaGrammar
-        if ($grammar instanceof SchemaGrammar) {
-            $grammar->setLengthInChar($this->getConfigLengthInChar());
-        }
-
         return $grammar;
     }
 
@@ -410,13 +406,33 @@ class Dm8Connection extends Connection
     }
 
     /**
+     * Get config strict mode setting.
+     *
+     * @return bool
+     */
+    protected function getConfigStrictMode()
+    {
+        return isset($this->config['strict_mode']) ? (bool) $this->config['strict_mode'] : false;
+    }
+
+    /**
      * Get the default schema grammar instance.
      *
      * @return \Illuminate\Database\Grammar|\LaravelDm8\Dm8\Schema\Grammars\DmGrammar
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar());
+        return $this->withTablePrefix($this->configureSchemaGrammar(new SchemaGrammar()));
+    }
+
+    /**
+     * Configure the default schema grammar instance.
+     */
+    protected function configureSchemaGrammar(SchemaGrammar $grammar)
+    {
+        $grammar->setLengthInChar($this->getConfigLengthInChar());
+        $grammar->setStrictMode($this->getConfigStrictMode());
+        return $grammar;
     }
 
     /**

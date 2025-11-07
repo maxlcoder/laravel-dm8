@@ -47,11 +47,123 @@ class DmGrammar extends Grammar
     protected $length_in_char = false;
 
     /**
+     * Whether to use strict mode for column default values.
+     *
+     * @var bool
+     */
+    protected $strict_mode = false;
+
+    /**
      * If this Grammar supports schema changes wrapped in a transaction.
      *
      * @var bool
      */
     protected $transactions = true;
+
+    /**
+     * Get the columns for a table creation or modification command.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return array
+     */
+    protected function getColumns(Blueprint $blueprint)
+    {
+        if (!$this->strict_mode) {
+             // Process columns to set default values for NOT NULL non-auto-increment columns
+            $columns = $blueprint->getColumns();
+
+            // Collect primary key columns defined at the blueprint level
+            $primaryColumns = [];
+            $primaryCommand = $this->getCommandByName($blueprint, 'primary');
+            if ($primaryCommand && isset($primaryCommand->columns)) {
+                $primaryColumns = array_map('strtolower', (array) $primaryCommand->columns);
+            }
+            
+            foreach ($columns as $column) {
+                // Ensure column is a Fluent object
+                if (! ($column instanceof Fluent)) {
+                    continue;
+                }
+                
+                // Set default value for NOT NULL columns that are not auto-increment and have no default
+                // Check if column is NOT NULL, not auto-increment, and has no explicit default
+                if (! $column->nullable &&
+                    ! ($column->autoIncrement ?? false) &&
+                    ! ($column->primary ?? false) &&
+                    ! in_array(strtolower($column->name), $primaryColumns, true) &&
+                    is_null($column->default)) {
+                    
+                    $defaultValue = $this->getDefaultValueForType($column->type);
+                    if ($defaultValue !== null) {
+                        $column->default = $defaultValue;
+                    }
+                }
+            }
+        }
+        
+        // Call parent method to compile columns
+        return parent::getColumns($blueprint);
+    }
+
+    /**
+     * Get default value based on column type.
+     *
+     * @param  string  $type
+     * @return mixed
+     */
+    protected function getDefaultValueForType($type)
+    {
+        // Normalize type name (remove any parameters like decimal(10,2) -> decimal)
+        $normalizedType = strtolower(trim(explode('(', $type)[0]));
+        
+        // String types - default to empty string
+        $stringTypes = [
+            'string', 'text', 'longvarchar',
+            'char', 'varchar', 'varchar2', 'nvarchar2', 'nvarchar', 
+            'json', 'jsonb'
+        ];
+        if (in_array($normalizedType, $stringTypes)) {
+            return '';
+        }
+        
+        // Integer types - default to 0
+        $integerTypes = [
+            // int
+            'integer', 'int', 'bigint','smallint', 'tinyint',
+            // float
+            'float', 'double', 'decimal', 'numeric', 'dec', 'number', 'real', 'double precision',
+            // boolean
+            'boolean', 
+            // byte
+            'bit', 'byte'
+        ];
+        if (in_array($normalizedType, $integerTypes)) {
+            return 0;
+        }
+        
+        // Date/time types - return null to use database default
+        $dateTimeTypes = [
+            'date', 'datetime', 
+            'time', 
+            'timestamp', 'timestamp time zone', 'timestamp with timezone', 'timestamp with local time zone',
+            'year'
+        ];
+        if (in_array($normalizedType, $dateTimeTypes)) {
+            return null;
+        }
+        
+        // Binary types - return null
+        $binaryTypes = [
+            'binary', 'varbinary',
+            'blob', 'clob',
+            'raw'
+        ];
+        if (in_array($normalizedType, $binaryTypes)) {
+            return null;
+        }
+        
+        return '';
+    }
 
     /**
      * Compile a create table command.
@@ -130,6 +242,26 @@ class DmGrammar extends Grammar
     public function setLengthInChar($lengthInChar)
     {
         $this->length_in_char = (bool) $lengthInChar;
+    }
+
+    /**
+     * Get the strict mode setting.
+     *
+     * @return bool
+     */
+    public function getStrictMode()
+    {
+        return $this->strict_mode;
+    }
+
+    /**
+     * Set the strict mode setting.
+     *
+     * @param  bool  $strictMode
+     */
+    public function setStrictMode($strictMode)
+    {
+        $this->strict_mode = (bool) $strictMode;
     }
 
     /**
