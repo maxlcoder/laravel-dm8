@@ -359,6 +359,36 @@ class DmGrammar extends Grammar
     }
 
     /**
+     * Compile a change column command.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @return array
+     */
+    public function compileChange(Blueprint $blueprint, Fluent $command, Connection $connection)
+    {
+        $table = $this->wrapTable($blueprint);
+        $columns = [];
+
+        foreach ($blueprint->getChangedColumns() as $column) {
+            // Get the column definition (type + modifiers)
+            $sql = $this->getType($column);
+
+            // Add modifiers (nullable, default, etc.)
+            foreach ($this->modifiers as $modifier) {
+                if (method_exists($this, $method = "modify{$modifier}")) {
+                    $sql .= $this->{$method}($blueprint, $column);
+                }
+            }
+
+            // DM8 syntax: ALTER TABLE table_name MODIFY column_name definition
+            $columns[] = 'alter table '.$table.' modify '.$this->wrap($column).' '.$sql;
+        }
+
+        return $columns;
+    }
+
+    /**
      * Compile a primary key command.
      *
      * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
@@ -621,6 +651,47 @@ class DmGrammar extends Grammar
         );
     }
 
+    /**
+     * Compile an update enum check constraint command.
+     * 
+     * DM8 does not support altering check constraints directly,
+     * so we need to drop the old constraint and create a new one.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @param  \Illuminate\Support\Fluent  $command
+     * @return array
+     */
+    public function compileUpdateEnum(Blueprint $blueprint, Fluent $command)
+    {
+        $table = $this->wrapTable($blueprint);
+        $column = $this->wrapTable($command->column);
+        $constraintName = $this->getConstraintName($table, $column);
+        
+        $sql = [];
+        
+        // Drop the old check constraint
+        $sql[] = "alter table {$table} drop constraint {$constraintName}";
+        
+        // Add the new check constraint with updated values
+        $values = implode("', '", $command->allowed);
+        $sql[] = "alter table {$table} add constraint {$constraintName} check ({$column} in ('{$values}'))";
+        
+        return $sql;
+    }
+
+    /**
+     * Get the check enum constraint name for a column.
+     *
+     * @param  string  $table
+     * @param  string  $column
+     * @return string
+     */
+    private function getConstraintName(string $table, string $column)
+    {
+        $table = str_replace(['"', "'", '`'], '', strtolower($table));
+        $column = str_replace(['"', "'", '`'], '', strtolower($column));
+        return $table.'_'.$column.'_enum';
+    }
 
     /**
      * Create the column definition for a char type.
@@ -952,7 +1023,7 @@ class DmGrammar extends Grammar
         $enum = '';
         if (count((array) $column->allowed)) {
             $columnName = $this->wrapValue($column->name);
-            $constraintName = $blueprint->getTable().'_'.$columnName.'_enum';
+            $constraintName = $this->getConstraintName($this->wrapTable($blueprint), $columnName);
             $enum = " constraint {$constraintName} check ({$columnName} in ('".implode("', '", $column->allowed)."'))";
         }
 

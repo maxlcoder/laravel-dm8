@@ -93,7 +93,7 @@ class Dm8Connection extends Connection
         }
         // according to the username & database, pick the correct schema
         try {
-            $result = $this->select("select object_name from dba_objects where object_type='SCH' and object_name='$database'");
+            $result = $this->select("select object_name from sys.dba_objects where object_type='SCH' and object_name='$database'");
             if (!empty($result)) {
                 return $database;
             }
