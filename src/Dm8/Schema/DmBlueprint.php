@@ -87,4 +87,19 @@ class DmBlueprint extends Blueprint
     {
         return $this->addColumn('nvarchar2', $column, compact('length'));
     }
+
+    /**
+     * Update enum check constraint for a column.
+     * 
+     * In DM8, check constraints cannot be modified directly,
+     * so we need to drop the old constraint and create a new one.
+     *
+     * @param  string  $column
+     * @param  array  $allowed
+     * @return \Illuminate\Support\Fluent
+     */
+    public function updateEnum($column, array $allowed)
+    {
+        return $this->addCommand('updateEnum', compact('column', 'allowed'));
+    }
 }

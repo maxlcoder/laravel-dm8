@@ -17,6 +17,7 @@ use LaravelDm8\Dm8\Query\DmBuilder as QueryBuilder;
 use LaravelDm8\Dm8\Query\Processors\DmProcessor as Processor;
 use LaravelDm8\Dm8\Schema\Grammars\DmGrammar as SchemaGrammar;
 use LaravelDm8\Dm8\Schema\DmBuilder as SchemaBuilder;
+use LaravelDm8\Dm8\SchemaManager\DmSchemaManager;
 use LaravelDm8\Dm8\Schema\Sequence;
 use LaravelDm8\Dm8\Schema\Trigger;
 use LaravelDm8\PDO\Dm8\Statement;
@@ -51,7 +52,8 @@ class Dm8Connection extends Connection
         parent::__construct($pdo, $database, $tablePrefix, $config);
         $this->sequence = new Sequence($this);
         $this->trigger = new Trigger($this);
-        $this->setSchema($this->prepareSchema($config['username'], $database));
+        $this->schema = $this->prepareSchema($config['username'], $database);
+        $this->setSchema($this->schema);
     }
 
     /**
@@ -224,6 +226,28 @@ class Dm8Connection extends Connection
     protected function getDoctrineDriver()
     {
         return class_exists(Version::class) ? new DoctrineDriver : new DmDriver();
+    }
+
+    /**
+     * Get the schema manager for the connection.
+     *
+     * @return \LaravelDm8\Dm8\SchemaManager\DmSchemaManager
+     */
+    public function getDoctrineSchemaManager()
+    {
+        return new DmSchemaManager($this);
+    }
+
+    /**
+     * Get a single column information.
+     *
+     * @param  string  $table
+     * @param  string  $column
+     * @return \LaravelDm8\Dm8\SchemaManager\DmColumn|null
+     */
+    public function getDoctrineColumn($table, $column)
+    {
+        return $this->getDoctrineSchemaManager()->getColumn($table, $column);
     }
 
     /**
