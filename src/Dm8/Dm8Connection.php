@@ -223,7 +223,7 @@ class Dm8Connection extends Connection
      */
     protected function getDoctrineDriver()
     {
-        return class_exists(Version::class) ? new DoctrineDriver : new DmDriver();
+        return new DmDriver();
     }
 
     /**

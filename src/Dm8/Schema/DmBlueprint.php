@@ -52,8 +52,6 @@ class DmBlueprint extends Blueprint
             'unique'  => 'uk',
         ];
 
-        $type = isset($short_type[$type]) ? $short_type[$type] : $type;
-
         $index = strtolower($this->prefix.$this->table.'_'.implode('_', $columns).'_'.$type);
 
         $index = str_replace(['-', '.'], '_', $index);
@@ -67,6 +65,9 @@ class DmBlueprint extends Blueprint
                 $len = strlen($parts[$i]);
                 if ($len > 2) {
                     $parts[$i] = substr($parts[$i], 0, $len - 1);
+                }
+                if ($i === count($parts) - 1) {
+                    $parts[$i] = $short_type[$type];
                 }
             }
 

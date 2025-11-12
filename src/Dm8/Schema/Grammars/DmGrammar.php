@@ -120,10 +120,17 @@ class DmGrammar extends Grammar
         $stringTypes = [
             'string', 'text', 'longvarchar',
             'char', 'varchar', 'varchar2', 'nvarchar2', 'nvarchar', 
-            'json', 'jsonb'
         ];
         if (in_array($normalizedType, $stringTypes)) {
             return '';
+        }
+
+        // JSON types - default to empty JSON object
+        $jsonTypes = [
+            'json', 'jsonb'
+        ];
+        if (in_array($normalizedType, $jsonTypes)) {
+            return '{}';
         }
         
         // Integer types - default to 0
@@ -318,6 +325,40 @@ class DmGrammar extends Grammar
         return '';
     }
 
+        /**
+     * Get the primary key constraint syntax for ALTER TABLE statement.
+     *
+     * @param  \Illuminate\Database\Schema\Blueprint  $blueprint
+     * @return string|null
+     */
+    protected function getPrimaryKeyConstraint(Blueprint $blueprint)
+    {
+        $primary = $this->getCommandByName($blueprint, 'primary');
+
+        if (! is_null($primary)) {
+            $columns = $this->columnize($primary->columns);
+
+            return " constraint {$primary->index} primary key ( {$columns} )";
+        }
+
+        return '';
+    }
+
+    protected function isSinglePrimaryWithAutoIncrement(Blueprint $blueprint)
+    {
+        // 单主键+auto_increment，可以在一条alter语句中使用
+        $primary = $this->getCommandByName($blueprint, 'primary');
+        if (!is_null($primary) && count($primary->columns) == 1) {
+            $primayColumn = $primary->columns[0];
+            foreach ($blueprint->getColumns() as $column) {
+                if ($column->name == $primayColumn && $column->autoIncrement) {
+                    return $primary;
+                }
+            }
+        }
+        return null;
+    }
+
     /**
      * Compile the query to determine if a table exists.
      *
@@ -349,13 +390,23 @@ class DmGrammar extends Grammar
      */
     public function compileAdd(Blueprint $blueprint, Fluent $command)
     {
-        $columns = implode(', ', $this->getColumns($blueprint));
+        $table = $this->wrapTable($blueprint);
+        $columns = $this->getColumns($blueprint);
+        $primayWithAutoIncrementColumn = $this->isSinglePrimaryWithAutoIncrement($blueprint);
+        
+        $statements = [];
+        foreach ($columns as $column) {
+            $sql = '';
+            $column_name = explode(' ', $column)[0] ?? null;
+            if (!is_null($primayWithAutoIncrementColumn) && $column_name == $primayWithAutoIncrementColumn->columns[0]) { // 处理单主键+auto_increment的情况
+                $sql = "alter table {$table} add {$column} constraint {$primayWithAutoIncrementColumn->index} primary key";
+            } else {
+                $sql = "alter table {$table} add {$column}";
+            }
+            $statements[] = $sql;
+        }
 
-        $sql = 'alter table '.$this->wrapTable($blueprint)." add ( $columns";
-
-        $sql .= (string) $this->addPrimaryKeys($blueprint);
-
-        return $sql .= ' )';
+        return $statements;
     }
 
     /**
@@ -530,11 +581,16 @@ class DmGrammar extends Grammar
      */
     public function compileDropColumn(Blueprint $blueprint, Fluent $command)
     {
-        $columns = $this->wrapArray($command->columns);
+        $columns = $command->columns;
 
         $table = $this->wrapTable($blueprint);
 
-        return 'alter table '.$table.' drop ( '.implode(', ', $columns).' )';
+        $statements = [];
+        foreach ($columns as $column) {
+            $statements[] = 'alter table '.$table.' drop column '.$this->wrap($column);
+        }
+
+        return $statements;
     }
 
     /**
@@ -558,7 +614,7 @@ class DmGrammar extends Grammar
     private function dropConstraint(Blueprint $blueprint, Fluent $command, $type)
     {
         $table = $this->wrapTable($blueprint);
-        $index = substr($command->index, 0, 30);
+        $index = $command->index;
 
         if ($type === 'index') {
             return "drop index if exists {$index}";
