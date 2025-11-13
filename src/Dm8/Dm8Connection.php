@@ -52,6 +52,7 @@ class Dm8Connection extends Connection
         $this->sequence = new Sequence($this);
         $this->trigger = new Trigger($this);
         $this->setSchema($this->prepareSchema($config['username'], $database));
+        $this->setDateFormat('YYYY-MM-DD HH24:MI:SS');
     }
 
     /**
@@ -124,8 +125,8 @@ class Dm8Connection extends Connection
             }
         }
 
-        if ($vars) {
-            $sql = 'ALTER SESSION SET '.implode(' ', $vars);
+        foreach ($vars as $var) {
+            $sql = "ALTER SESSION SET $var";
             $this->statement($sql);
         }
 

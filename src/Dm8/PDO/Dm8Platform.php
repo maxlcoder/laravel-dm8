@@ -100,7 +100,7 @@ class Dm8Platform extends OraclePlatform
             'datetime'      => 'datetime',     // 日期时间
             
             // === 布尔类型 ===
-            'boolean'       => 'boolean',      // 布尔类型
+            'boolean'       => 'integer',      // 布尔类型
             
             // === 其他类型 ===
             'rowid'         => 'string',       // 行ID

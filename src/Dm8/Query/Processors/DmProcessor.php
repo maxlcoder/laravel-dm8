@@ -102,6 +102,9 @@ class DmProcessor extends Processor
                     $values[$i] = (string) $values[$i];
                 }
             }
+            if (is_bool($values[$i])) {
+                $values[$i] = (int) $values[$i];
+            }
             $type = $this->getPdoType($values[$i]);
             $statement->bindParam($parameter, $values[$i], $type);
             $parameter++;

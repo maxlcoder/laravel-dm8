@@ -1019,7 +1019,7 @@ class DmGrammar extends Grammar
      */
     protected function typeUuid(Fluent $column)
     {
-        return $this->wrapCharType('char', '36');
+        return $this->wrapCharType('varchar', '36');
     }
 
     /**
