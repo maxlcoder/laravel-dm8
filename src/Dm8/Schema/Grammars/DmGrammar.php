@@ -93,7 +93,8 @@ class DmGrammar extends Grammar
                     ! in_array(strtolower($column->name), $primaryColumns, true) &&
                     is_null($column->default)) {
                     
-                    $defaultValue = $this->getDefaultValueForType($column->type);
+                    // Get the actual database type (after transformation via typeXxx methods)
+                    $defaultValue = $this->getDefaultValueForType($this->getType($column));
                     if ($defaultValue !== null) {
                         $column->default = $defaultValue;
                     }
@@ -157,6 +158,8 @@ class DmGrammar extends Grammar
             return '00:00:00';
         } else if ($normalizedType == 'year') {
             return '1970';
+        } else if (strpos($normalizedType, 'time') !== false || strpos($normalizedType, 'date') !== false) {
+            return '1970-01-01 00:00:00';
         }
         
         // Binary types - return null
