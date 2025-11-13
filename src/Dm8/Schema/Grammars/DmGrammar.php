@@ -149,14 +149,14 @@ class DmGrammar extends Grammar
         }
         
         // Date/time types - return null to use database default
-        $dateTimeTypes = [
-            'date', 'datetime', 
-            'time', 
-            'timestamp', 'timestamp time zone', 'timestamp with timezone', 'timestamp with local time zone',
-            'year'
-        ];
-        if (in_array($normalizedType, $dateTimeTypes)) {
-            return null;
+        if (in_array($normalizedType, ['datetime', 'timestamp', 'timestamp time zone', 'timestamp with timezone', 'timestamp with local time zone'])) {
+            return '1970-01-01 00:00:00';
+        } else if ($normalizedType == 'date') {
+            return '1970-01-01';
+        } else if ($normalizedType == 'time') {
+            return '00:00:00';
+        } else if ($normalizedType == 'year') {
+            return '1970';
         }
         
         // Binary types - return null
