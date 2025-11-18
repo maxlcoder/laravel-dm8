@@ -672,7 +672,7 @@ class DmGrammar extends Grammar
      */
     protected function typeDateTime(Fluent $column)
     {
-        return 'date';
+        return 'datetime';
     }
 
     /**
@@ -683,7 +683,7 @@ class DmGrammar extends Grammar
      */
     protected function typeTime(Fluent $column)
     {
-        return 'date';
+        return 'time';
     }
 
     /**
