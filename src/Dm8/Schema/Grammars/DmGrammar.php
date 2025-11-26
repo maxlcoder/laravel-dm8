@@ -760,7 +760,7 @@ class DmGrammar extends Grammar
      */
     protected function typeChar(Fluent $column)
     {
-        return $this->wrapCharType('char', $column->length);
+        return $this->wrapCharType('varchar2', $column->length);
     }
 
     /**
@@ -1022,7 +1022,7 @@ class DmGrammar extends Grammar
      */
     protected function typeUuid(Fluent $column)
     {
-        return $this->wrapCharType('varchar', '36');
+        return $this->wrapCharType('varchar2', '36');
     }
 
     /**
@@ -1033,7 +1033,7 @@ class DmGrammar extends Grammar
      */
     protected function typeIpAddress(Fluent $column)
     {
-        return $this->wrapCharType('varchar', '45');
+        return $this->wrapCharType('varchar2', '45');
     }
 
     /**
@@ -1044,7 +1044,7 @@ class DmGrammar extends Grammar
      */
     protected function typeMacAddress(Fluent $column)
     {
-        return $this->wrapCharType('varchar', '17');
+        return $this->wrapCharType('varchar2', '17');
     }
 
     /**
