@@ -51,7 +51,7 @@ class Dm8Connection extends Connection
         parent::__construct($pdo, $database, $tablePrefix, $config);
         $this->sequence = new Sequence($this);
         $this->trigger = new Trigger($this);
-        $this->setSchema($this->prepareSchema($config['username'], $database));
+        $this->setSchema($database);
         $this->setDateFormat('YYYY-MM-DD HH24:MI:SS');
     }
 
@@ -82,33 +82,6 @@ class Dm8Connection extends Connection
     }
 
     /**
-     * Pick the correct schema according to the username & database.
-     *
-     * @param  string  $username
-     * @param  string  $database
-     * @return string  the correct schema
-     */
-    protected function prepareSchema($username, $database) {
-        if ($username == $database) {
-            return $database;
-        }
-        // according to the username & database, pick the correct schema
-        try {
-            $result = $this->select("select object_name from sys.dba_objects where object_type='SCH' and object_name='$database'");
-            if (!empty($result)) {
-                return $database;
-            }
-
-            $this->statement("create schema $database authorization $username");
-            return $database;
-        } catch (\Exception $e) {
-            return $username;
-        }
-
-        return $username;
-    }
-
-    /**
      * Update oracle session variables.
      *
      * @param  array  $sessionVars
@@ -118,8 +91,10 @@ class Dm8Connection extends Connection
     {
         $vars = [];
         foreach ($sessionVars as $option => $value) {
-            if (strtoupper($option) == 'CURRENT_SCHEMA' || strtoupper($option) == 'EDITION') {
+            if (strtoupper($option) == 'EDITION') {
                 $vars[] = "$option  = $value";
+            } else if (strtoupper($option) == 'CURRENT_SCHEMA') {
+                $vars[] = "$option  = \"$value\"";
             } else {
                 $vars[] = "$option  = '$value'";
             }
