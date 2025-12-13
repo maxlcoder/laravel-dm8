@@ -170,6 +170,17 @@ class DmGrammar extends Grammar
     }
 
     /**
+     * Compile the query to determine the tables.
+     *
+     * @param  string  $database
+     * @return string
+     */
+    public function compileTables()
+    {
+        return 'select TABLE_NAME as name from USER_TABLES where TABLESPACE_NAME IS NOT NULL order by TABLE_NAME';
+    }
+
+    /**
      * Compile the query to determine the list of columns.
      *
      * @param  string  $database
@@ -179,6 +190,25 @@ class DmGrammar extends Grammar
     public function compileColumnExists($database, $table)
     {
         return "select column_name from all_tab_cols where upper(owner) = upper('{$database}') and upper(table_name) = upper('{$table}')";
+    }
+
+    /**
+     * Compile the query to determine the columns.
+     *
+     * @param  string  $table
+     * @return string
+     */
+    public function compileColumns($table)
+    {
+        return sprintf(
+            "select COLUMN_NAME name, DATA_TYPE type_name, "
+            ."DATA_LENGTH length, NULLABLE nullable, "
+            ."DATA_DEFAULT 'default' "
+            ."FROM USER_TAB_COLUMNS "
+            ."WHERE TABLE_NAME = %s "
+            ."ORDER BY COLUMN_ID asc",
+            $this->quoteString($table)
+        );
     }
 
     /**
