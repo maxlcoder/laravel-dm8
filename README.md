@@ -1,4 +1,4 @@
-# DM DB driver for Laravel 4|5|6|7|8|9 via DM8
+# DM8 driver for Laravel 10 / PHP 8.2+
 
 ## 查询写法
 > 1. 使用 `selectRaw` 或者 `DB::raw` 函数查询时，如果当前数据库是忽略大小写的，一律返回小写字段名，
@@ -26,25 +26,16 @@ Laravel-DM8 is an Dm Database Driver package for [Laravel](http://laravel.com/).
 
 ## Laravel Version Compatibility
 
- Laravel  | Package
-:---------|:----------
- 5.1.x    | 5.1.x
- 5.2.x    | 5.2.x
- 5.3.x    | 5.3.x
- 5.4.x    | 5.4.x
- 5.5.x    | 5.5.x
- 5.6.x    | 5.6.x
- 5.7.x    | 5.7.x
- 5.8.x    | 5.8.x
- 6.x.x    | 6.x.x
- 7.x.x    | 7.x.x
- 8.x.x    | 8.x.x
- 9.x.x    | 9.x.x
+| Laravel | PHP | Package |
+| --- | --- | --- |
+| 10.x | 8.2+ | 1.2.x |
+| 12.x | 8.2+ | 2.x |
+| Older applications | Historical requirements | 1.1.7 and earlier |
 
 ## Quick Installation
 
 ```bash
-composer require maxlcoder/laravel-dm8
+composer require maxlcoder/laravel-dm8:^1.2
 ```
 
 ## Service Provider (Optional on Laravel 5.5+)
@@ -85,3 +76,19 @@ Then run your laravel installation...
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
 [link-author]: https://github.com/jackfinal
+
+## Upgrading Laravel 10 applications to 1.2
+
+Version 1.2 contains the insertGetId fixes in the package itself. Remove application-level DM8 patch definitions, patch lock entries and custom patch-check hooks, then run `composer require maxlcoder/laravel-dm8:^1.2 -W`. Restart PHP-FPM and queue workers afterward. Keep unrelated application patches if any.
+
+- Query Builder must specify non-default keys: `DB::table('log')->insertGetId($values, 'log_id')`.
+- Eloquent `save()` uses the model's `$primaryKey`.
+- Custom sequences on `DmEloquent` are allocated explicitly before insertion; an explicitly supplied key is retained.
+- OUT keys use `PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT` with `PHP_INT_SIZE`, rather than a negative buffer length.
+- Use PDO_DM native extensions matching your PHP version, CPU architecture and thread-safety mode. Composer packages do not replace native extensions.
+
+## Tests
+
+Run `composer install` and `composer test`. Regression coverage uses SQLite and mocked PDO statements for queries, schema compilation, custom primary keys, custom sequences and LOB bindings. No writes to a real DM database are performed. Real insert, LOB and migration integration still needs verification in your test environment.
+
+Laravel 10 is outside official security maintenance. This driver release does not fix framework security advisories.
