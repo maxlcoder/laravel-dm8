@@ -57,9 +57,9 @@ class DmBuilder extends Builder
      * @param  Closure  $callback
      * @return \Illuminate\Database\Schema\Blueprint
      */
-    protected function createBlueprint($table, Closure $callback = null)
+    protected function createBlueprint($table, ?Closure $callback = null)
     {
-        $blueprint = new DmBlueprint($table, $callback);
+        $blueprint = new DmBlueprint($this->connection, $table, $callback);
         $blueprint->setTablePrefix($this->connection->getTablePrefix());
 
         return $blueprint;

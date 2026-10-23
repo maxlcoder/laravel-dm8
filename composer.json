@@ -9,22 +9,20 @@
         }
     ],
     "require": {
-        "php": ">7",
+        "php": "^8.2",
         "ext-pdo": "*",
-        "illuminate/database": ">5",
-        "illuminate/pagination": ">5",
-        "illuminate/support": ">5",
-        "illuminate/validation": ">5"
+        "illuminate/database": "^12.0",
+        "illuminate/pagination": "^12.0",
+        "illuminate/support": "^12.0",
+        "illuminate/validation": "^12.0"
     },
     "require-dev": {
-        "doctrine/dbal": "^3.3",
-        "mockery/mockery": "^1.4.4",
-        "orchestra/testbench": "^7.0",
-        "phpunit/phpunit": "^9.5.8"
+        "mockery/mockery": "^1.6",
+        "phpunit/phpunit": "^11.0"
     },
     "autoload": {
         "files": [
-          "src/helper.php"
+            "src/helper.php"
         ],
         "psr-4": {
             "LaravelDm8\\": "src/"
@@ -32,12 +30,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "LaravelDm8\\": "src/"
+            "LaravelDm8\\Tests\\": "tests/"
         }
     },
     "extra": {
         "branch-alias": {
-          "dev-master": "1.x-dev"
+            "dev-master": "2.x-dev"
         },
         "laravel": {
             "providers": [
@@ -47,8 +45,14 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "phpunit"
+    }
 }

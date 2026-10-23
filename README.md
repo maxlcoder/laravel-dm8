@@ -1,4 +1,4 @@
-# DM DB driver for Laravel 4|5|6|7|8|9 via DM8
+# DM8 driver for Laravel 12 / PHP 8.2+
 
 ## 查询写法
 > 1. 使用 `selectRaw` 或者 `DB::raw` 函数查询时，如果当前数据库是忽略大小写的，一律返回小写字段名，
@@ -26,25 +26,18 @@ Laravel-DM8 is an Dm Database Driver package for [Laravel](http://laravel.com/).
 
 ## Laravel Version Compatibility
 
- Laravel  | Package
-:---------|:----------
- 5.1.x    | 5.1.x
- 5.2.x    | 5.2.x
- 5.3.x    | 5.3.x
- 5.4.x    | 5.4.x
- 5.5.x    | 5.5.x
- 5.6.x    | 5.6.x
- 5.7.x    | 5.7.x
- 5.8.x    | 5.8.x
- 6.x.x    | 6.x.x
- 7.x.x    | 7.x.x
- 8.x.x    | 8.x.x
- 9.x.x    | 9.x.x
+| Laravel | PHP | Package |
+| --- | --- | --- |
+| 12.x | 8.2+ | 2.x |
+| Legacy projects | Historical requirements | 1.x (unchanged) |
+
+Version 2 requires a PDO_DM extension compiled for your PHP version, architecture and thread-safety mode.
+The native `dm` extension and Composer package are separate components; upgrading this package does not upgrade native extensions.
 
 ## Quick Installation
 
 ```bash
-composer require maxlcoder/laravel-dm8
+composer require maxlcoder/laravel-dm8:^2.0
 ```
 
 ## Service Provider (Optional on Laravel 5.5+)
@@ -85,3 +78,21 @@ Then run your laravel installation...
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
 [link-author]: https://github.com/jackfinal
+
+## Upgrading from 1.x to 2.x
+
+1. Use PHP 8.2+ and Laravel 12.
+2. Remove application-level compatibility patches targeting `maxlcoder/laravel-dm8`, including their lock entries and custom patch scripts. Version 2 includes those fixes.
+3. Run `composer require maxlcoder/laravel-dm8:^2.0 --with-all-dependencies`, then restart PHP-FPM and queue workers.
+4. Plain Query Builder calls must specify a non-`id` key: `DB::table('log')->insertGetId($values, 'log_id')`. Eloquent `save()` uses the model's `$primaryKey`.
+
+Version 2 removes debug-backtrace inspection during insertion. `DmEloquent` allocates an explicitly configured sequence before the insert and preserves an explicitly supplied primary key. OUT parameters use `PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT` and a positive `PHP_INT_SIZE` buffer, following the [PDO binding contract](https://www.php.net/manual/en/pdostatement.bindparam.php).
+
+## Tests
+
+```sh
+composer install
+composer test
+```
+
+The suite (9 tests, 55 assertions) covers Laravel 12 query/schema compilation, prefixes, pagination, plain Query Builder and Eloquent custom keys, explicit sequences and LOB binding. Tests use SQLite and mocked PDO statements and do not write to a DM server. A separate read-only PDO_DM constant-query probe confirmed output binding with the PHP 8.2 native extension. Real DM insert/LOB/migration integration is still required in your test environment.

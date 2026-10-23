@@ -296,6 +296,10 @@ class DmEloquent extends Model
      */
     protected function insertAndSetId(Builder $query, $attributes)
     {
+        if ($this->sequence && !isset($attributes[$this->getKeyName()]) && $this->getIncrementing()) {
+            $attributes[$this->getKeyName()] = $this->getConnection()->getSequence()->nextValue($this->sequence);
+        }
+
         $id = ($binaries = $this->extractBinaries($attributes)) ?
             $query->getQuery()->insertLob($attributes, $binaries, $keyName = $this->getKeyName()) :
             $query->insertGetId($attributes, $keyName = $this->getKeyName());

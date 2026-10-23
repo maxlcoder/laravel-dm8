@@ -3,7 +3,6 @@
 namespace LaravelDm8\Dm8\Query\Processors;
 
 use DateTime;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Processors\Processor;
 use PDO;
@@ -29,13 +28,12 @@ class DmProcessor extends Processor
          $id = 0;
          $parameter = 1;
          $statement = $this->prepareStatement($query, $sql);
-         $values = $this->incrementBySequence($values, $sequence);
          $parameter = $this->bindValues($values, $statement, $parameter);
-         $statement->bindParam($parameter, $id, PDO::PARAM_INT, -1);
+         $statement->bindParam($parameter, $id, PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT, PHP_INT_SIZE);
          $statement->execute();
 
          $values[] = '?';
-         $connection->logQuery($sql, $values, $start);
+         $connection->logQuery($sql, $values, (microtime(true) - $start) * 1000);
 
          return (int) $id;
      }
@@ -54,33 +52,6 @@ class DmProcessor extends Processor
         $pdo = $connection->getPdo();
 
         return $pdo->prepare($sql);
-    }
-
-    /**
-     * Insert a new record and get the value of the primary key.
-     *
-     * @param  array  $values
-     * @param  string  $sequence
-     * @return array
-     */
-    protected function incrementBySequence(array $values, $sequence)
-    {
-        $builder = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[3]['object'];
-        $builderArgs = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 5)[2]['args'];
-
-        if (! isset($builderArgs[1][0][$sequence])) {
-            if ($builder instanceof EloquentBuilder) {
-                /** @var \LaravelDm8\Dm8\Eloquent\DmEloquent $model */
-                $model = $builder->getModel();
-                /** @var \LaravelDm8\Dm8\Dm8Connection $connection */
-                $connection = $model->getConnection();
-                if ($model->sequence && $model->incrementing) {
-                    $values[] = (int) $connection->getSequence()->nextValue($model->sequence);
-                }
-            }
-        }
-
-        return $values;
     }
 
     /**
@@ -157,18 +128,18 @@ class DmProcessor extends Processor
 
         $countBinary = count($binaries);
         for ($i = 0; $i < $countBinary; $i++) {
-            $statement->bindParam($parameter, $binaries[$i], PDO::PARAM_LOB, -1);
+            $statement->bindParam($parameter, $binaries[$i], PDO::PARAM_LOB);
             $parameter++;
         }
 
         // bind output param for the returning clause.
-        $statement->bindParam($parameter, $id, PDO::PARAM_INT, -1);
+        $statement->bindParam($parameter, $id, PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT, PHP_INT_SIZE);
 
         if (! $statement->execute()) {
             return false;
         }
 
-        $connection->logQuery($sql, $values, $start);
+        $connection->logQuery($sql, $values, (microtime(true) - $start) * 1000);
 
         return (int) $id;
     }
