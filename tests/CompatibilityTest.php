@@ -16,7 +16,7 @@ class CompatibilityTest extends TestCase
 {
     private function connection(?PDO $pdo = null): Dm8Connection
     {
-        return new Dm8Connection($pdo ?? new PDO('sqlite::memory:'), '', 'app_', [
+        return new Dm8Connection($pdo ?? $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock(), '', 'app_', [
             'driver' => 'dm', 'prefix_schema' => 'APP',
         ]);
     }
@@ -29,13 +29,18 @@ class CompatibilityTest extends TestCase
         $this->assertSame([1], $query->getBindings());
     }
 
-    public function test_wrap_table_accepts_prefix_override_and_raw_expression(): void
+    public function test_wrap_table_keeps_aliases_and_raw_expression(): void
     {
         $grammar = $this->connection()->getQueryGrammar();
-        $this->assertSame('"APP"."custom_users"', $grammar->wrapTable('users', 'custom_'));
-        $this->assertSame('"APP"."users"', $grammar->wrapTable('users', ''));
         $this->assertSame('DUAL', $grammar->wrapTable(new Expression('DUAL')));
         $this->assertSame('"APP"."app_users" app_u', $grammar->wrapTable('users as u'));
+    }
+
+    public function test_wrap_table_accepts_explicit_prefix(): void
+    {
+        $grammar = $this->connection()->getQueryGrammar();
+        $this->assertSame('"APP"."other_users"', $grammar->wrapTable('users', 'other_'));
+        $this->assertSame('"APP"."users"', $grammar->wrapTable('users', ''));
     }
 
     public function test_pagination_still_compiles_dm_rownum(): void
@@ -44,17 +49,20 @@ class CompatibilityTest extends TestCase
         $this->assertStringContainsString('rownum', strtolower($sql));
     }
 
-    public function test_schema_blueprint_uses_laravel_twelve_connection(): void
+    public function test_schema_blueprint_uses_connection_and_grammar(): void
     {
         $connection = $this->connection();
         $connection->useDefaultSchemaGrammar();
-        $blueprint = new DmBlueprint($connection, 'probe');
+        $constructor = new \ReflectionMethod(DmBlueprint::class, '__construct');
+        $blueprint = $constructor->getParameters()[0]->getName() === 'connection'
+            ? new DmBlueprint($connection, 'probe')
+            : new DmBlueprint('probe');
         $blueprint->create();
         $blueprint->string('title');
-        $sql = $blueprint->toSql()[0];
+        $sql = $blueprint->toSql($connection, $connection->getSchemaGrammar())[0];
         $this->assertStringContainsString('create table', strtolower($sql));
         $this->assertStringContainsString('title', $sql);
-        $this->assertSame('APP.custom_probe', $connection->getSchemaGrammar()->wrapTable('probe', 'custom_'));
+        $this->assertSame('APP.app_probe', $connection->getSchemaGrammar()->wrapTable('probe'));
     }
 
     public function test_schema_builder_create_and_rename_compile_without_a_database(): void
@@ -110,6 +118,48 @@ class CompatibilityTest extends TestCase
     private static function insertLog(Dm8Connection $connection): int
     {
         return $connection->table('log')->insertGetId(['title' => 'probe'], 'log_id');
+    }
+
+    public function test_omitted_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn(null, true);
+    }
+
+    public function test_null_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn(null, false);
+    }
+
+    public function test_empty_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn('', false);
+    }
+
+    private function assertPdoIdentityReturn(?string $column, bool $omit): void
+    {
+        $statement = $this->getMockBuilder(PDOStatement::class)->disableOriginalConstructor()->getMock();
+        $statement->expects($this->once())->method('bindValue')->with(1, 'probe')->willReturn(true);
+        $statement->expects($this->never())->method('bindParam');
+        $statement->expects($this->once())->method('execute')->willReturn(true);
+        $pdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
+        $connection = $this->connection($pdo);
+        $query = $connection->table('log');
+        $sql = $connection->getQueryGrammar()->compileInsert($query, ['title' => 'probe']);
+        $pdo->expects($this->once())->method('prepare')->with($sql)->willReturn($statement);
+        $pdo->expects($this->once())->method('lastInsertId')->with(null)->willReturn('654');
+        $readPdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
+        $readPdo->expects($this->never())->method('prepare');
+        $readPdo->expects($this->never())->method('lastInsertId');
+        $connection->setReadPdo($readPdo);
+
+        $id = $omit ? $query->insertGetId(['title' => 'probe'])
+            : $query->insertGetId(['title' => 'probe'], $column);
+        $this->assertSame(654, $id);
+        $modified = new \ReflectionProperty(\Illuminate\Database\Connection::class, 'recordsModified');
+        if (PHP_VERSION_ID < 80100) {
+            $modified->setAccessible(true);
+        }
+        $this->assertTrue($modified->getValue($connection));
     }
 
     public function test_plain_eloquent_model_returns_its_custom_primary_key(): void

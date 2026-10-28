@@ -59,7 +59,11 @@ class DmBuilder extends Builder
      */
     protected function createBlueprint($table, ?Closure $callback = null)
     {
-        $blueprint = new DmBlueprint($this->connection, $table, $callback);
+        // Laravel 12 passes the connection to Blueprint's constructor.
+        $constructor = new \ReflectionMethod(DmBlueprint::class, '__construct');
+        $blueprint = $constructor->getParameters()[0]->getName() === 'connection'
+            ? new DmBlueprint($this->connection, $table, $callback)
+            : new DmBlueprint($table, $callback);
         $blueprint->setTablePrefix($this->connection->getTablePrefix());
 
         return $blueprint;

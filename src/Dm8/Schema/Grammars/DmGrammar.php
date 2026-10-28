@@ -200,6 +200,7 @@ class DmGrammar extends Grammar
      */
     public function compileColumns($schema, $table = null)
     {
+        $table = $table ?? $schema;
         return sprintf(
             "select COLUMN_NAME name, DATA_TYPE type_name, "
             ."DATA_LENGTH length, NULLABLE nullable, "
@@ -474,7 +475,7 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Database\Connection  $connection
      * @return array
      */
-    public function compileRenameColumn(Blueprint $blueprint, Fluent $command)
+    public function compileRenameColumn(Blueprint $blueprint, Fluent $command, ?Connection $connection = null)
     {
         $table = $this->wrapTable($blueprint);
 

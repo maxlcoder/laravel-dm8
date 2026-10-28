@@ -341,6 +341,11 @@ class Dm8Connection extends Connection
      */
     public function withTablePrefix(Grammar $grammar)
     {
+        // Laravel 10 stores the prefix on the grammar; Laravel 12 uses the connection.
+        if (method_exists(Connection::class, 'withTablePrefix')) {
+            $grammar = parent::withTablePrefix($grammar);
+        }
+
         return $this->withSchemaPrefix($grammar);
     }
 

@@ -9,16 +9,16 @@
         }
     ],
     "require": {
-        "php": "^8.2",
+        "php": "^7.3 || ^8.0",
         "ext-pdo": "*",
-        "illuminate/database": "^12.0",
-        "illuminate/pagination": "^12.0",
-        "illuminate/support": "^12.0",
-        "illuminate/validation": "^12.0"
+        "illuminate/database": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0",
+        "illuminate/pagination": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0",
+        "illuminate/support": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0",
+        "illuminate/validation": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0"
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
-        "phpunit/phpunit": "^11.0"
+        "phpunit/phpunit": "^9.6 || ^10.5"
     },
     "autoload": {
         "files": [
@@ -35,7 +35,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "2.x-dev"
+            "dev-codex/laravel10-driver": "1.2.x-dev"
         },
         "laravel": {
             "providers": [
@@ -45,10 +45,7 @@
         }
     },
     "config": {
-        "sort-packages": true,
-        "platform": {
-            "php": "8.2.0"
-        }
+        "sort-packages": true
     },
     "minimum-stability": "stable",
     "prefer-stable": true,

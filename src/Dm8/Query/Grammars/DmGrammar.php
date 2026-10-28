@@ -229,7 +229,7 @@ class DmGrammar extends Grammar
         if (strpos(strtolower($table), ' as ') !== false) {
             $table = str_replace(' as ', ' ', strtolower($table));
         }
-        $prefix = $prefix ?? $this->connection->getTablePrefix();
+        $prefix = $prefix ?? (isset($this->connection) ? $this->connection->getTablePrefix() : $this->tablePrefix);
         $tableName = $this->wrap($prefix.$table, true);
         $segments = explode(' ', $table);
         if (count($segments) > 1) {
@@ -282,10 +282,11 @@ class DmGrammar extends Grammar
      * @param  string  $sequence
      * @return string
      */
-     public function compileInsertGetId(Builder $query, $values, $sequence = 'id')
+     public function compileInsertGetId(Builder $query, $values, $sequence = null)
      {
-         if (empty($sequence)) {
-             $sequence = 'id';
+         // An omitted return column uses PDO's generated identity instead.
+         if ($sequence === null || $sequence === '') {
+             return $this->compileInsert($query, $values);
          }
 
          return $this->compileInsert($query, $values).' returning '.$this->wrap($sequence).' into ?';
