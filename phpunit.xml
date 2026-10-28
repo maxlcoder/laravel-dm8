@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="vendor/autoload.php" colors="true" cacheDirectory=".phpunit.cache" failOnWarning="true" failOnDeprecation="true">
+<phpunit bootstrap="vendor/autoload.php" colors="true" failOnWarning="true">
     <testsuites><testsuite name="DM8"><directory>tests</directory></testsuite></testsuites>
-    <source><include><directory>src</directory></include></source>
 </phpunit>

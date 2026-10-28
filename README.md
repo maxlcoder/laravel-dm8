@@ -26,11 +26,15 @@ Laravel-DM8 is an Dm Database Driver package for [Laravel](http://laravel.com/).
 
 ## Laravel Version Compatibility
 
-| Laravel | PHP | Package |
-| --- | --- | --- |
-| 10.x | 8.2+ | 1.2.x |
-| 12.x | 8.2+ | 2.x |
-| Older applications | Historical requirements | 1.1.7 and earlier |
+The 1.2.x line accepts PHP `^7.3 || ^8.0` and Illuminate 6–10. Composer also enforces each Illuminate version's own PHP requirements.
+
+| Laravel / Illuminate | Minimum PHP for this package |
+| --- | --- |
+| 6, 7, 8 | 7.3 |
+| 9 | 8.0.2 |
+| 10 | 8.1 |
+
+Laravel 12 uses the separate 2.x line. PDO_DM must match the installed PHP runtime.
 
 ## Quick Installation
 
@@ -90,6 +94,6 @@ Version 1.2 contains the insertGetId fixes in the package itself. Remove applica
 
 ## Tests
 
-Run `composer install` and `composer test`. Regression coverage uses SQLite and mocked PDO statements for queries, schema compilation, custom primary keys, custom sequences and LOB bindings. No writes to a real DM database are performed. Real insert, LOB and migration integration still needs verification in your test environment.
+Run `composer install` and `composer test`. Regression coverage uses mocked PDO connections and statements for queries, schema compilation, custom primary keys, custom sequences and LOB bindings. No writes to a real DM database are performed. Real insert, LOB and migration integration still needs verification in your test environment.
 
 Laravel 10 is outside official security maintenance. This driver release does not fix framework security advisories.

@@ -4,15 +4,27 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        php: ['8.2', '8.3']
+        include:
+          - {php: '7.3', illuminate: '6'}
+          - {php: '7.3', illuminate: '7'}
+          - {php: '7.3', illuminate: '8'}
+          - {php: '8.0', illuminate: '9'}
+          - {php: '8.1', illuminate: '10'}
+          - {php: '8.2', illuminate: '10'}
+          - {php: '8.3', illuminate: '10'}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: pdo, pdo_sqlite, mbstring
+          extensions: pdo, mbstring
+          tools: composer:v2
           coverage: none
-      - run: composer install --no-interaction --prefer-dist
+      - name: Select Illuminate major
+        run: composer require --no-update "illuminate/database:^${{ matrix.illuminate }}.0" "illuminate/pagination:^${{ matrix.illuminate }}.0" "illuminate/support:^${{ matrix.illuminate }}.0" "illuminate/validation:^${{ matrix.illuminate }}.0"
+      # Historical Illuminate releases are intentionally tested for compatibility.
+      - run: composer update --no-interaction --prefer-dist --no-security-blocking
       - run: composer validate --strict
       - run: composer test

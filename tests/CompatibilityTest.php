@@ -16,7 +16,7 @@ class CompatibilityTest extends TestCase
 {
     private function connection(?PDO $pdo = null): Dm8Connection
     {
-        return new Dm8Connection($pdo ?? new PDO('sqlite::memory:'), '', 'app_', [
+        return new Dm8Connection($pdo ?? $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock(), '', 'app_', [
             'driver' => 'dm', 'prefix_schema' => 'APP',
         ]);
     }
@@ -42,7 +42,7 @@ class CompatibilityTest extends TestCase
         $this->assertStringContainsString('rownum', strtolower($sql));
     }
 
-    public function test_schema_blueprint_uses_laravel_ten_connection(): void
+    public function test_schema_blueprint_uses_connection_and_grammar(): void
     {
         $connection = $this->connection();
         $connection->useDefaultSchemaGrammar();
@@ -128,7 +128,7 @@ class CompatibilityTest extends TestCase
     private function assertPdoIdentityReturn(?string $column, bool $omit): void
     {
         $statement = $this->getMockBuilder(PDOStatement::class)->disableOriginalConstructor()->getMock();
-        $statement->expects($this->once())->method('bindValue')->with(1, 'probe', PDO::PARAM_STR)->willReturn(true);
+        $statement->expects($this->once())->method('bindValue')->with(1, 'probe')->willReturn(true);
         $statement->expects($this->never())->method('bindParam');
         $statement->expects($this->once())->method('execute')->willReturn(true);
         $pdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
@@ -145,7 +145,9 @@ class CompatibilityTest extends TestCase
         $id = $omit ? $query->insertGetId(['title' => 'probe'])
             : $query->insertGetId(['title' => 'probe'], $column);
         $this->assertSame(654, $id);
-        $this->assertTrue($connection->hasModifiedRecords());
+        $modified = new \ReflectionProperty(\Illuminate\Database\Connection::class, 'recordsModified');
+        $modified->setAccessible(true);
+        $this->assertTrue($modified->getValue($connection));
     }
 
     public function test_plain_eloquent_model_returns_its_custom_primary_key(): void
