@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.2
 
 - Accept PHP `^7.3 || ^8.0` with Illuminate 6–10 instead of requiring PHP 8.2 / Illuminate 10.
 - Remove the fixed Composer PHP platform; allow PHPUnit 9.6 or 10.5 and use shared test configuration.
