@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+- Restore omitted, null and empty `insertGetId()` return-column compatibility using a plain INSERT and the write PDO connection's `lastInsertId()`.
+- Preserve explicit return-column RETURNING behavior, Eloquent primary keys, custom sequences and LOB handling.
+- Add regression coverage for identity retrieval, input bindings and read/write connection selection.
+
 ## 1.2.0
 
 Laravel 10 / PHP 8.2 compatibility line; no application-level patches required.

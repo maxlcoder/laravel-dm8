@@ -81,7 +81,8 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 Version 1.2 contains the insertGetId fixes in the package itself. Remove application-level DM8 patch definitions, patch lock entries and custom patch-check hooks, then run `composer require maxlcoder/laravel-dm8:^1.2 -W`. Restart PHP-FPM and queue workers afterward. Keep unrelated application patches if any.
 
-- Query Builder must specify non-default keys: `DB::table('log')->insertGetId($values, 'log_id')`.
+- Since 1.2.1, Query Builder can omit the return column: `DB::table('log')->insertGetId($values)`. This uses a plain INSERT and the write PDO connection's `lastInsertId()`, including for auto-increment columns named something other than `id`. PDO_DM must support identity retrieval.
+- Passing a return column retains RETURNING behavior: `DB::table('log')->insertGetId($values, 'log_id')`. Tables without a generated identity should use `insert()`.
 - Eloquent `save()` uses the model's `$primaryKey`.
 - Custom sequences on `DmEloquent` are allocated explicitly before insertion; an explicitly supplied key is retained.
 - OUT keys use `PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT` with `PHP_INT_SIZE`, rather than a negative buffer length.

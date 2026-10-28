@@ -110,6 +110,44 @@ class CompatibilityTest extends TestCase
         return $connection->table('log')->insertGetId(['title' => 'probe'], 'log_id');
     }
 
+    public function test_omitted_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn(null, true);
+    }
+
+    public function test_null_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn(null, false);
+    }
+
+    public function test_empty_return_column_uses_pdo_identity(): void
+    {
+        $this->assertPdoIdentityReturn('', false);
+    }
+
+    private function assertPdoIdentityReturn(?string $column, bool $omit): void
+    {
+        $statement = $this->getMockBuilder(PDOStatement::class)->disableOriginalConstructor()->getMock();
+        $statement->expects($this->once())->method('bindValue')->with(1, 'probe', PDO::PARAM_STR)->willReturn(true);
+        $statement->expects($this->never())->method('bindParam');
+        $statement->expects($this->once())->method('execute')->willReturn(true);
+        $pdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
+        $connection = $this->connection($pdo);
+        $query = $connection->table('log');
+        $sql = $connection->getQueryGrammar()->compileInsert($query, ['title' => 'probe']);
+        $pdo->expects($this->once())->method('prepare')->with($sql)->willReturn($statement);
+        $pdo->expects($this->once())->method('lastInsertId')->with(null)->willReturn('654');
+        $readPdo = $this->getMockBuilder(PDO::class)->disableOriginalConstructor()->getMock();
+        $readPdo->expects($this->never())->method('prepare');
+        $readPdo->expects($this->never())->method('lastInsertId');
+        $connection->setReadPdo($readPdo);
+
+        $id = $omit ? $query->insertGetId(['title' => 'probe'])
+            : $query->insertGetId(['title' => 'probe'], $column);
+        $this->assertSame(654, $id);
+        $this->assertTrue($connection->hasModifiedRecords());
+    }
+
     public function test_plain_eloquent_model_returns_its_custom_primary_key(): void
     {
         $connection = $this->insertConnection(321);

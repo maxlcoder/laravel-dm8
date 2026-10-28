@@ -20,6 +20,10 @@ class DmProcessor extends Processor
      */
      public function processInsertGetId(Builder $query, $sql, $values, $sequence = null)
      {
+         if ($sequence === null || $sequence === '') {
+             return parent::processInsertGetId($query, $sql, $values, null);
+         }
+
          $connection = $query->getConnection();
 
          $connection->recordsHaveBeenModified();
