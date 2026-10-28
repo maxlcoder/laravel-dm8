@@ -80,9 +80,9 @@ class DmGrammar extends Grammar
      * @param  mixed  $table
      * @return string
      */
-    public function wrapTable($table)
+    public function wrapTable($table, $prefix = null)
     {
-        return $this->getSchemaPrefix().parent::wrapTable($table);
+        return $this->getSchemaPrefix().parent::wrapTable($table, $prefix);
     }
 
     /**
@@ -164,7 +164,7 @@ class DmGrammar extends Grammar
      *
      * @return string
      */
-    public function compileTableExists()
+    public function compileTableExists($schema = null, $table = null)
     {
         return 'select * from all_tables where upper(owner) = upper(?) and upper(table_name) = upper(?)';
     }
@@ -175,7 +175,7 @@ class DmGrammar extends Grammar
      * @param  string  $database
      * @return string
      */
-    public function compileTables()
+    public function compileTables($schema = null)
     {
         return 'select TABLE_NAME as name from USER_TABLES where TABLESPACE_NAME IS NOT NULL order by TABLE_NAME';
     }
@@ -198,8 +198,9 @@ class DmGrammar extends Grammar
      * @param  string  $table
      * @return string
      */
-    public function compileColumns($table)
+    public function compileColumns($schema, $table = null)
     {
+        $table = $table ?? $schema;
         return sprintf(
             "select COLUMN_NAME name, DATA_TYPE type_name, "
             ."DATA_LENGTH length, NULLABLE nullable, "
@@ -474,7 +475,7 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Database\Connection  $connection
      * @return array
      */
-    public function compileRenameColumn(Blueprint $blueprint, Fluent $command, Connection $connection)
+    public function compileRenameColumn(Blueprint $blueprint, Fluent $command, ?Connection $connection = null)
     {
         $table = $this->wrapTable($blueprint);
 

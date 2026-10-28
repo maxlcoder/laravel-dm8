@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.3
+
+- Extend dependency support to Illuminate 11 and 12 while retaining Illuminate 6–10.
+- Pass connections to query/schema grammars and retain legacy table-prefix initialization.
+- Accept Laravel 12's optional table-prefix and schema compilation arguments.
+- Support both legacy and Laravel 12 Blueprint constructors.
+- Add explicit-prefix regression tests and Illuminate 11/12 CI jobs.
+
 ## 1.2.2
 
 - Accept PHP `^7.3 || ^8.0` with Illuminate 6–10 instead of requiring PHP 8.2 / Illuminate 10.
@@ -22,4 +30,4 @@ Laravel 10 / PHP 8.2 compatibility line; no application-level patches required.
 - Remove negative input LOB buffer lengths and correct query duration units.
 - Add regression tests for query/schema SQL, custom keys, sequences and LOB bindings.
 
-Validated with mocks/SQLite on PHP 8.2. Real database writes remain unverified by explicit user preference. Laravel 12 continues to use 2.x.
+Validated with mocks/SQLite on PHP 8.2. Real database writes remain unverified by explicit user preference. Laravel 12 support is included in 1.2.3 and later.

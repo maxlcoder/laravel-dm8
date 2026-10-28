@@ -330,7 +330,7 @@ class Dm8Connection extends Connection
      */
     protected function getDefaultQueryGrammar()
     {
-        return $this->withTablePrefix(new QueryGrammar());
+        return $this->withTablePrefix(new QueryGrammar($this));
     }
 
     /**
@@ -341,7 +341,12 @@ class Dm8Connection extends Connection
      */
     public function withTablePrefix(Grammar $grammar)
     {
-        return $this->withSchemaPrefix(parent::withTablePrefix($grammar));
+        // Laravel 10 stores the prefix on the grammar; Laravel 12 uses the connection.
+        if (method_exists(Connection::class, 'withTablePrefix')) {
+            $grammar = parent::withTablePrefix($grammar);
+        }
+
+        return $this->withSchemaPrefix($grammar);
     }
 
     /**
@@ -374,7 +379,7 @@ class Dm8Connection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-        return $this->withTablePrefix(new SchemaGrammar());
+        return $this->withTablePrefix(new SchemaGrammar($this));
     }
 
     /**

@@ -14,6 +14,8 @@ jobs:
           - {php: '8.1', illuminate: '10'}
           - {php: '8.2', illuminate: '10'}
           - {php: '8.3', illuminate: '10'}
+          - {php: '8.2', illuminate: '11'}
+          - {php: '8.2', illuminate: '12'}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2

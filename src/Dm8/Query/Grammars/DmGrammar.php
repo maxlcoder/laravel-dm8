@@ -220,7 +220,7 @@ class DmGrammar extends Grammar
      * @param  \Illuminate\Database\Query\Expression|string  $table
      * @return string
      */
-    public function wrapTable($table)
+    public function wrapTable($table, $prefix = null)
     {
         if ($this->isExpression($table)) {
             return $this->getValue($table);
@@ -229,10 +229,11 @@ class DmGrammar extends Grammar
         if (strpos(strtolower($table), ' as ') !== false) {
             $table = str_replace(' as ', ' ', strtolower($table));
         }
-        $tableName = $this->wrap($this->tablePrefix.$table, true);
+        $prefix = $prefix ?? (isset($this->connection) ? $this->connection->getTablePrefix() : $this->tablePrefix);
+        $tableName = $this->wrap($prefix.$table, true);
         $segments = explode(' ', $table);
         if (count($segments) > 1) {
-            $tableName = $this->wrap($this->tablePrefix.$segments[0]).' ' . $this->tablePrefix . $segments[1];
+            $tableName = $this->wrap($prefix.$segments[0]).' ' . $prefix . $segments[1];
         }
 
         return $this->getSchemaPrefix().$tableName;

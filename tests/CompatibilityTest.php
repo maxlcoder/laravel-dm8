@@ -36,6 +36,13 @@ class CompatibilityTest extends TestCase
         $this->assertSame('"APP"."app_users" app_u', $grammar->wrapTable('users as u'));
     }
 
+    public function test_wrap_table_accepts_explicit_prefix(): void
+    {
+        $grammar = $this->connection()->getQueryGrammar();
+        $this->assertSame('"APP"."other_users"', $grammar->wrapTable('users', 'other_'));
+        $this->assertSame('"APP"."users"', $grammar->wrapTable('users', ''));
+    }
+
     public function test_pagination_still_compiles_dm_rownum(): void
     {
         $sql = $this->connection()->table('users')->limit(10)->offset(5)->toSql();
@@ -46,7 +53,10 @@ class CompatibilityTest extends TestCase
     {
         $connection = $this->connection();
         $connection->useDefaultSchemaGrammar();
-        $blueprint = new DmBlueprint('probe');
+        $constructor = new \ReflectionMethod(DmBlueprint::class, '__construct');
+        $blueprint = $constructor->getParameters()[0]->getName() === 'connection'
+            ? new DmBlueprint($connection, 'probe')
+            : new DmBlueprint('probe');
         $blueprint->create();
         $blueprint->string('title');
         $sql = $blueprint->toSql($connection, $connection->getSchemaGrammar())[0];
@@ -146,7 +156,9 @@ class CompatibilityTest extends TestCase
             : $query->insertGetId(['title' => 'probe'], $column);
         $this->assertSame(654, $id);
         $modified = new \ReflectionProperty(\Illuminate\Database\Connection::class, 'recordsModified');
-        $modified->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $modified->setAccessible(true);
+        }
         $this->assertTrue($modified->getValue($connection));
     }
 

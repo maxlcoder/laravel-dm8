@@ -1,4 +1,4 @@
-# DM8 driver for Laravel 10 / PHP 8.2+
+# DM8 driver for Laravel / PHP
 
 ## 查询写法
 > 1. 使用 `selectRaw` 或者 `DB::raw` 函数查询时，如果当前数据库是忽略大小写的，一律返回小写字段名，
@@ -26,20 +26,21 @@ Laravel-DM8 is an Dm Database Driver package for [Laravel](http://laravel.com/).
 
 ## Laravel Version Compatibility
 
-The 1.2.x line accepts PHP `^7.3 || ^8.0` and Illuminate 6–10. Composer also enforces each Illuminate version's own PHP requirements.
+The 1.2.x line accepts PHP `^7.3 || ^8.0` and Illuminate 6–12 (Illuminate 11/12 require 1.2.3 or later). Composer also enforces each Illuminate version's own PHP requirements.
 
 | Laravel / Illuminate | Minimum PHP for this package |
 | --- | --- |
 | 6, 7, 8 | 7.3 |
 | 9 | 8.0.2 |
 | 10 | 8.1 |
+| 11–12 | 8.2 |
 
-Laravel 12 uses the separate 2.x line. PDO_DM must match the installed PHP runtime.
+Laravel 12 uses the 1.2.x line starting with 1.2.3. PDO_DM must match the installed PHP runtime.
 
 ## Quick Installation
 
 ```bash
-composer require maxlcoder/laravel-dm8:^1.2
+composer require maxlcoder/laravel-dm8:^1.2.3
 ```
 
 ## Service Provider (Optional on Laravel 5.5+)
@@ -83,7 +84,7 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 ## Upgrading Laravel 10 applications to 1.2
 
-Version 1.2 contains the insertGetId fixes in the package itself. Remove application-level DM8 patch definitions, patch lock entries and custom patch-check hooks, then run `composer require maxlcoder/laravel-dm8:^1.2 -W`. Restart PHP-FPM and queue workers afterward. Keep unrelated application patches if any.
+Version 1.2 contains the insertGetId fixes in the package itself. Remove application-level DM8 patch definitions, patch lock entries and custom patch-check hooks, then run `composer require maxlcoder/laravel-dm8:^1.2.3 -W`. Restart PHP-FPM and queue workers afterward. Keep unrelated application patches if any.
 
 - Since 1.2.1, Query Builder can omit the return column: `DB::table('log')->insertGetId($values)`. This uses a plain INSERT and the write PDO connection's `lastInsertId()`, including for auto-increment columns named something other than `id`. PDO_DM must support identity retrieval.
 - Passing a return column retains RETURNING behavior: `DB::table('log')->insertGetId($values, 'log_id')`. Tables without a generated identity should use `insert()`.
