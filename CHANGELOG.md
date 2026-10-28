@@ -1,13 +1,33 @@
 # Changelog
 
-## 2.0.0
+## 1.2.3
 
-- Require PHP 8.2+ and Illuminate 12; retain the 1.x tags for older applications.
-- Adapt query and schema Grammar signatures, connection-aware Grammar constructors and Blueprint creation to Laravel 12.
-- Preserve schema/table prefixes, including explicit table-prefix overrides.
-- Remove insertion logic depending on fixed debug-backtrace frames; allocate custom sequences explicitly in DmEloquent.
-- Bind returned keys as input/output integers with a positive native integer buffer; remove negative LOB input buffer lengths.
-- Record query durations in milliseconds.
-- Add isolated regression tests and PHP 8.2/8.3/8.4 CI.
+- Extend dependency support to Illuminate 11 and 12 while retaining Illuminate 6–10.
+- Pass connections to query/schema grammars and retain legacy table-prefix initialization.
+- Accept Laravel 12's optional table-prefix and schema compilation arguments.
+- Support both legacy and Laravel 12 Blueprint constructors.
+- Add explicit-prefix regression tests and Illuminate 11/12 CI jobs.
 
-Validation: mocked insert/schema tests and a real PHP 8.2 PDO_DM read-only output binding probe. No writes to a real DM database were performed; real insert, LOB and migration integration remains unverified.
+## 1.2.2
+
+- Accept PHP `^7.3 || ^8.0` with Illuminate 6–10 instead of requiring PHP 8.2 / Illuminate 10.
+- Remove the fixed Composer PHP platform; allow PHPUnit 9.6 or 10.5 and use shared test configuration.
+- Add CI coverage for each Illuminate major with an appropriate PHP runtime.
+
+## 1.2.1
+
+- Restore omitted, null and empty `insertGetId()` return-column compatibility using a plain INSERT and the write PDO connection's `lastInsertId()`.
+- Preserve explicit return-column RETURNING behavior, Eloquent primary keys, custom sequences and LOB handling.
+- Add regression coverage for identity retrieval, input bindings and read/write connection selection.
+
+## 1.2.0
+
+Laravel 10 / PHP 8.2 compatibility line; no application-level patches required.
+
+- Remove fixed debug-backtrace frame access from insert SQL compilation and processing.
+- Allocate configured DmEloquent sequences explicitly, preserving supplied primary keys.
+- Use positive native integer buffers and input/output flags for returned keys.
+- Remove negative input LOB buffer lengths and correct query duration units.
+- Add regression tests for query/schema SQL, custom keys, sequences and LOB bindings.
+
+Validated with mocks/SQLite on PHP 8.2. Real database writes remain unverified by explicit user preference. Laravel 12 support is included in 1.2.3 and later.

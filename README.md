@@ -1,4 +1,4 @@
-# DM8 driver for Laravel 12 / PHP 8.2+
+# DM8 driver for Laravel / PHP
 
 ## 查询写法
 > 1. 使用 `selectRaw` 或者 `DB::raw` 函数查询时，如果当前数据库是忽略大小写的，一律返回小写字段名，
@@ -7,7 +7,7 @@
 ## 推荐更新版本到最新版
 
 > 修改部分适配 Laravel  
-> 1. 适配 InsertGetId，当表主键非 id 时，需要指定主键列名
+> 1. 适配 insertGetId：省略返回列时通过 PDO 获取自增值，也可显式指定返回列名
 > 2. 修复 DmBuilder 中 DmAutoIncrementHelper 引用
 > 3. 适配 withCount, 主要是 x_table as y 情况 前缀补充，原包，没有在 y 前面追加前缀，和 Laravel 不兼容
 > 4. 适配 cast json ，数组参数转 json 入库
@@ -26,18 +26,21 @@ Laravel-DM8 is an Dm Database Driver package for [Laravel](http://laravel.com/).
 
 ## Laravel Version Compatibility
 
-| Laravel | PHP | Package |
-| --- | --- | --- |
-| 12.x | 8.2+ | 2.x |
-| Legacy projects | Historical requirements | 1.x (unchanged) |
+The 1.2.x line accepts PHP `^7.3 || ^8.0` and Illuminate 6–12 (Illuminate 11/12 require 1.2.3 or later). Composer also enforces each Illuminate version's own PHP requirements.
 
-Version 2 requires a PDO_DM extension compiled for your PHP version, architecture and thread-safety mode.
-The native `dm` extension and Composer package are separate components; upgrading this package does not upgrade native extensions.
+| Laravel / Illuminate | Minimum PHP for this package |
+| --- | --- |
+| 6, 7, 8 | 7.3 |
+| 9 | 8.0.2 |
+| 10 | 8.1 |
+| 11–12 | 8.2 |
+
+Laravel 12 uses the 1.2.x line starting with 1.2.3. PDO_DM must match the installed PHP runtime.
 
 ## Quick Installation
 
 ```bash
-composer require maxlcoder/laravel-dm8:^2.0
+composer require maxlcoder/laravel-dm8:^1.2.3
 ```
 
 ## Service Provider (Optional on Laravel 5.5+)
@@ -79,20 +82,19 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 
 [link-author]: https://github.com/jackfinal
 
-## Upgrading from 1.x to 2.x
+## Upgrading to 1.2.3
 
-1. Use PHP 8.2+ and Laravel 12.
-2. Remove application-level compatibility patches targeting `maxlcoder/laravel-dm8`, including their lock entries and custom patch scripts. Version 2 includes those fixes.
-3. Run `composer require maxlcoder/laravel-dm8:^2.0 --with-all-dependencies`, then restart PHP-FPM and queue workers.
-4. Plain Query Builder calls must specify a non-`id` key: `DB::table('log')->insertGetId($values, 'log_id')`. Eloquent `save()` uses the model's `$primaryKey`.
+Version 1.2.3 supports Laravel 6–12 and includes the insertGetId fixes in the package itself. Remove application-level DM8 patch definitions, patch lock entries and custom patch-check hooks, then run `composer require maxlcoder/laravel-dm8:^1.2.3 -W`. Restart PHP-FPM and queue workers afterward. Keep unrelated application patches if any.
 
-Version 2 removes debug-backtrace inspection during insertion. `DmEloquent` allocates an explicitly configured sequence before the insert and preserves an explicitly supplied primary key. OUT parameters use `PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT` and a positive `PHP_INT_SIZE` buffer, following the [PDO binding contract](https://www.php.net/manual/en/pdostatement.bindparam.php).
+- Since 1.2.1, Query Builder can omit the return column: `DB::table('log')->insertGetId($values)`. This uses a plain INSERT and the write PDO connection's `lastInsertId()`, including for auto-increment columns named something other than `id`. PDO_DM must support identity retrieval.
+- Passing a return column retains RETURNING behavior: `DB::table('log')->insertGetId($values, 'log_id')`. Tables without a generated identity should use `insert()`.
+- Eloquent `save()` uses the model's `$primaryKey`.
+- Custom sequences on `DmEloquent` are allocated explicitly before insertion; an explicitly supplied key is retained.
+- OUT keys use `PDO::PARAM_INT | PDO::PARAM_INPUT_OUTPUT` with `PHP_INT_SIZE`, rather than a negative buffer length.
+- Use PDO_DM native extensions matching your PHP version, CPU architecture and thread-safety mode. Composer packages do not replace native extensions.
 
 ## Tests
 
-```sh
-composer install
-composer test
-```
+Run `composer install` and `composer test`. Regression coverage uses mocked PDO connections and statements for queries, schema compilation, custom primary keys, custom sequences and LOB bindings. No writes to a real DM database are performed. Real insert, LOB and migration integration still needs verification in your test environment.
 
-The suite (9 tests, 55 assertions) covers Laravel 12 query/schema compilation, prefixes, pagination, plain Query Builder and Eloquent custom keys, explicit sequences and LOB binding. Tests use SQLite and mocked PDO statements and do not write to a DM server. A separate read-only PDO_DM constant-query probe confirmed output binding with the PHP 8.2 native extension. Real DM insert/LOB/migration integration is still required in your test environment.
+Laravel 10 is outside official security maintenance. This driver release does not fix framework security advisories.
